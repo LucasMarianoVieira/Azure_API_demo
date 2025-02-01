@@ -1,0 +1,41 @@
+# Starter pipeline
+
+triger:
+- main
+
+pool:
+  vmImage: ubuntu-latest
+
+variables:
+  solution: './*.sln'
+  buildPlatform: 'Any CPU'
+  buildConfiguration: 'Release'
+
+
+
+steps:
+- task: useDotNet@2
+  displayName: 'Install .Net SDK'
+  inputs:
+    packageType: 'sdk'
+    version: '8.x'
+
+
+
+- script: 
+  dotnet restory $(solution)
+  displayName: 'restore Solution'
+
+- script: dotnet build $(solution) --configuration $(buildConfiguration)
+  displayName: 'Build Solution'
+
+- script: dotnet test $(solution) --configuration $(buildConfiguration) --no-build --collect:"XPlat Code Coverage"
+  displayName: 'Test Solution'
+
+- task: @Docker2
+  inputs:
+    containerRegistry: 'lucasmarianovieira2025'
+    repository: 'azure_api_deploy'
+    command: 'buildAndPush'
+    Dockerfile: './azure_api_deploy/Dockerfile'
+
